@@ -1,13 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato&display=swap");
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Lato", sans-serif;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.calendar_container {
+  margin: 3rem auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+}
+
+.calendar_container h2 {
+  margin: 2rem 0;
+  text-align: center;
+  border: 2px solid red;
+}
+
+.chart_container h1 {
+  text-align: center;
+  margin-top: 2rem;
+}
+.chart_container .charts {
+  margin: 2rem 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.chartOne,
+.chartTwo,
+.chartThree,
+.chartFour {
+  position: relative;
+  margin: 1rem 0;
+  width: 45%;
+}
+
+.loder_container {
+  background: rgba(0, 0, 0, 0.6);
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loder_container .loader {
+  border: 5px solid #f3f3f3; /* Light grey */
+  border-top: 5px solid #131516; /* Blue */
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
