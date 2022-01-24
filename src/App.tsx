@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import customerData from "./data.json";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import BarChart from "./BarChart";
@@ -7,23 +8,29 @@ import DateRangePicker from "react-daterange-picker";
 import "react-daterange-picker/dist/css/react-calendar.css";
 
 type scheduleType = {
-  schedule_time: Date;
+  schedule_time: string;
   slot: string;
-  item_date: Date;
+  item_date: string;
+}[];
+
+type dateRangeType = {
+  start?: Date;
+  end?: Date;
 };
 
 function App() {
   const [oneDate, setOneDate] = useState(new Date());
-  const [rangeDate, setRangeDate] = useState<{ start: any; end: any }>({
-    start: new Date(),
-    end: new Date(),
-  });
+  const [rangeDate, setRangeDate] = useState<dateRangeType>();
 
-  const [scheduleData, setScheduleData] = useState([]);
-  const [selectedDateScheduleData, setSelectedDateScheduleData] = useState([]);
-  const [rangeDateScheduleData, setRangeDateScheduleData] = useState([]);
+  const [selectedDateScheduleData, setSelectedDateScheduleData] =
+    useState<scheduleType>();
+  const [rangeDateScheduleData, setRangeDateScheduleData] =
+    useState<scheduleType>();
 
   const [loding, setLoding] = useState("");
+
+  let rangeDateStart = moment(rangeDate?.start).format("YYYY-MM-DD");
+  let rangeDateEnd = moment(rangeDate?.end).format("YYYY-MM-DD");
 
   useEffect(() => {
     setLoding("loder_container");
@@ -31,35 +38,30 @@ function App() {
   }, [oneDate, rangeDate]);
 
   async function getScheduleData() {
-    await fetch("https://jsonkeeper.com/b/HU8U")
-      .then((response) => response.json())
-      .then((res) => {
-        setScheduleData(res);
-        let oneDateData = res.filter((val: scheduleType) => {
-          let selctedOneDate: string = moment(oneDate).format("YYYY-MM-DD");
-
-          return moment(val.item_date).format("YYYY-MM-DD") === selctedOneDate;
-        });
-        setSelectedDateScheduleData(oneDateData);
-
-        let rangeDateData = res.filter((val: scheduleType) => {
-          let d = moment(val.schedule_time).format("YYYY-MM-DD");
-          let rangeDateStart = moment(rangeDate.start).format("YYYY-MM-DD");
-          let rangeDateEnd = moment(rangeDate.end).format("YYYY-MM-DD");
-          return moment(d, "YYYY-MM-DD").isBetween(
-            moment(rangeDateStart, "YYYY-MM-DD"),
-            moment(rangeDateEnd, "YYYY-MM-DD"),
-            undefined,
-            "[]"
-          );
-        });
-        setRangeDateScheduleData(rangeDateData);
-
-        setLoding("");
-      })
-      .catch((err) => {
-        console.log(err);
+    try {
+      // For single range
+      let oneDateData = await customerData.filter((val) => {
+        let selctedOneDate: string = moment(oneDate).format("YYYY-MM-DD");
+        return moment(val.item_date).format("YYYY-MM-DD") === selctedOneDate;
       });
+      setSelectedDateScheduleData(oneDateData);
+
+      // For date range
+      let rangeDateData = await customerData.filter((val) => {
+        let d = moment(val.schedule_time).format("YYYY-MM-DD");
+        return moment(d, "YYYY-MM-DD").isBetween(
+          moment(rangeDateStart, "YYYY-MM-DD"),
+          moment(rangeDateEnd, "YYYY-MM-DD"),
+          undefined,
+          "[]"
+        );
+      });
+      setRangeDateScheduleData(rangeDateData);
+
+      setLoding("");
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   const datasetOne = {
@@ -70,6 +72,7 @@ function App() {
           moment(oneDate).subtract(i, "days").format("DD MMM YYYY")
         );
       }
+
       let nextDates = new Array();
       for (let i: number = 1; i <= 2; i++) {
         nextDates.push(moment(oneDate).add(i, "days").format("DD MMM YYYY"));
@@ -86,7 +89,7 @@ function App() {
 
       datasetOne.labelArray().forEach((date: Date) => {
         let d = new Date(date);
-        let arr = scheduleData.filter((val: scheduleType) => {
+        let arr = customerData.filter((val) => {
           return (
             moment(val.item_date).format("YYYY-MM-DD") ===
             moment(d).format("YYYY-MM-DD")
@@ -124,7 +127,7 @@ function App() {
       let threeTo6 = new Array();
       let sixTo9 = new Array();
 
-      selectedDateScheduleData.forEach((val: scheduleType) => {
+      selectedDateScheduleData?.forEach((val) => {
         let currentTime = moment(val.schedule_time).format("HH:MM:SS");
 
         if (
@@ -191,7 +194,7 @@ function App() {
       let oneDayPrior = new Array();
       let twoDayPrior = new Array();
 
-      rangeDateScheduleData.forEach((val: scheduleType) => {
+      rangeDateScheduleData?.forEach((val) => {
         let schdldate = moment(val.schedule_time).format("yyyy-mm-dd");
         let itemdate = moment(val.item_date).format("yyyy-mm-dd");
         if (
@@ -216,7 +219,7 @@ function App() {
     },
     backgroundColor: ["rgba(75, 192, 192, 0.4)", "rgba(255, 159, 64, 0.4)"],
     borderColor: ["rgb(75, 192, 192)", "rgb(255, 159, 64)"],
-    label: "Prior Scheduling",
+    label: `Prior Scheduling Between ${rangeDateStart} - ${rangeDateEnd}`,
   };
 
   const datasetFour = {
@@ -243,7 +246,7 @@ function App() {
 
       datasetOne.labelArray().forEach((date: Date) => {
         let d = new Date(date);
-        let arr = scheduleData.filter((val: scheduleType) => {
+        let arr = customerData.filter((val) => {
           return (
             moment(val.schedule_time).format("YYYY-MM-DD") ===
             moment(d).format("YYYY-MM-DD")
@@ -279,13 +282,14 @@ function App() {
           <Calendar
             className="calendar"
             value={oneDate}
-            onChange={(date: Date) => setOneDate(date)}
+            onChange={(date: any) => setOneDate(date)}
           />
         </div>
         <div className="dateRang">
           <h2>Pick Date Range</h2>
           <DateRangePicker
             className="calendar"
+            singleDateRange={true}
             onSelect={(dates: any) => setRangeDate(dates)}
           />
         </div>
